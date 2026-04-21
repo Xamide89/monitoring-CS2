@@ -1,33 +1,62 @@
-import psutil
-import socket
-import time
-import json
+from fastapi import FastAPI
+from pydantic import BaseModel
+import pyodbc
 import os
+from dotenv import load_dotenv
 
-# можно потом заменить на .env
-API_URL = os.getenv("API_URL", "http://localhost:8000/metrics")
-INTERVAL = int(os.getenv("INTERVAL", 10))
+load_dotenv()
 
-def collect_metrics():
-    return {
-        "host": socket.gethostname(),
-        "cpu": psutil.cpu_percent(interval=1),
-        "ram": psutil.virtual_memory().percent,
-        "disk": psutil.disk_usage('/').percent,
-        "timestamp": time.time()
-    }
+app = FastAPI()
 
-def main():
-    print(f"[INFO] Monitoring started. Sending to {API_URL}")
-    
-    while True:
-        data = collect_metrics()
-        print("[DATA]", json.dumps(data, indent=2))
-        
-        # пока без API — просто вывод
-        # позже добавим requests.post(...)
-        
-        time.sleep(INTERVAL)
+class Metric(BaseModel):
+    host: str
+    cpu: float
+    ram: float
+    disk: float
 
-if __name__ == "__main__":
-    main()
+def get_connection():
+    conn = pyodbc.connect(
+        f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+        f"SERVER={os.getenv('DB_SERVER')};"
+        f"DATABASE={os.getenv('DB_NAME')};"
+        f"UID={os.getenv('DB_USER')};"
+        f"PWD={os.getenv('DB_PASSWORD')};"
+        "Encrypt=yes;"
+        "TrustServerCertificate=no;"
+    )
+    return conn
+
+@app.post("/metrics")
+def receive_metrics(metric: Metric):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO metrics (host, cpu, ram, disk)
+        VALUES (?, ?, ?, ?)
+    """, metric.host, metric.cpu, metric.ram, metric.disk)
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "stored"}
+
+@app.get("/metrics")
+def get_metrics():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM metrics")
+    rows = cursor.fetchall()
+
+    result = []
+    for r in rows:
+        result.append({
+            "host": r[0],
+            "cpu": r[1],
+            "ram": r[2],
+            "disk": r[3]
+        })
+
+    conn.close()
+    return result
