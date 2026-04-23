@@ -14,6 +14,10 @@ class Metric(BaseModel):
     ram: float
     disk: float
 
+@app.get("/")
+def root():
+    return {"status": "API is running"}
+
 def get_connection():
     conn = pyodbc.connect(
         f"DRIVER={{ODBC Driver 18 for SQL Server}};"
@@ -28,35 +32,43 @@ def get_connection():
 
 @app.post("/metrics")
 def receive_metrics(metric: Metric):
-    conn = get_connection()
-    cursor = conn.cursor()
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    cursor.execute("""
-        INSERT INTO metrics (host, cpu, ram, disk)
-        VALUES (?, ?, ?, ?)
-    """, metric.host, metric.cpu, metric.ram, metric.disk)
+        cursor.execute("""
+            INSERT INTO metrics (host, cpu, ram, disk)
+            VALUES (?, ?, ?, ?)
+        """, metric.host, metric.cpu, metric.ram, metric.disk)
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+        conn.close()
 
-    return {"status": "stored"}
+        return {"status": "stored"}
+
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/metrics")
 def get_metrics():
-    conn = get_connection()
-    cursor = conn.cursor()
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM metrics")
-    rows = cursor.fetchall()
+        cursor.execute("SELECT host, cpu, ram, disk FROM metrics")
+        rows = cursor.fetchall()
 
-    result = []
-    for r in rows:
-        result.append({
-            "host": r[0],
-            "cpu": r[1],
-            "ram": r[2],
-            "disk": r[3]
-        })
+        result = []
+        for r in rows:
+            result.append({
+                "host": r[0],
+                "cpu": r[1],
+                "ram": r[2],
+                "disk": r[3]
+            })
 
-    conn.close()
-    return result
+        conn.close()
+        return result
+
+    except Exception as e:
+        return {"error": str(e)}
