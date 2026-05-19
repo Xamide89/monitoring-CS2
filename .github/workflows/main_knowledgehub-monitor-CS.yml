@@ -80,5 +80,5 @@ jobs:
         with:
             app-name: knowledgehub-monitor-CS
             publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-            package: .
+            package: API
           
