@@ -74,7 +74,8 @@ jobs:
       #   with:
       #     app-name: 'knowledgehub-monitor-CS'
       #     slot-name: 'Production'
-
+      - name: List files
+        run: ls -R
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
