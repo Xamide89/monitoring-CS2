@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KnowledgeHub Monitoring</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 80%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+
+        th {
+            background: lightgray;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<h1>Monitoring Dashboard</h1>
+
+<table>
+
+<tr>
+    <th>Host</th>
+    <th>CPU %</th>
+    <th>RAM %</th>
+    <th>Disk %</th>
+</tr>
+
+{% for h in metrics %}
+
+<tr>
+    <td>{{ h.host }}</td>
+    <td>{{ h.cpu }}</td>
+    <td>{{ h.ram }}</td>
+    <td>{{ h.disk }}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+</html>
