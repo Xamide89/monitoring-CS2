@@ -1,8 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import pyodbc
 import os
 from dotenv import load_dotenv
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+
+templates = Jinja2Templates(
+    directory="templates"
+)
 
 load_dotenv()
 
@@ -20,9 +26,40 @@ class Metric(BaseModel):
     ram: float
     disk: float
 
-@app.get("/")
-def root():
-    return {"status": "API is running"}
+@app.get("/", response_class=HTMLResponse)
+def dashboard(request: Request):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT host,cpu,ram,disk
+        FROM metrics
+        """
+    )
+
+    rows = cursor.fetchall()
+
+    metrics = []
+
+    for r in rows:
+
+        metrics.append({
+            "host": r[0],
+            "cpu": r[1],
+            "ram": r[2],
+            "disk": r[3]
+        })
+
+    conn.close()
+
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {
+            "request": request,
+            "metrics": metrics
+        }
+    )
 
 def get_connection():
     conn = pyodbc.connect(
