@@ -69,9 +69,9 @@ def dashboard(request: Request):
     conn.close()
 
     return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
+        request=request,
+        name="dashboard.html",
+        context={
             "metrics": metrics
         }
     )
