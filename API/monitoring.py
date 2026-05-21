@@ -59,8 +59,13 @@ def dashboard(request: Request):
 
     for r in rows:
 
+        host = HOST_MAP.get(
+        r[0],
+        r[0]
+        )
+
         metrics.append({
-            "host": r[0],
+            "host": host,
             "cpu": r[1],
             "ram": r[2],
             "disk": r[3]
