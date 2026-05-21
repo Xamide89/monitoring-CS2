@@ -117,7 +117,7 @@ def get_metrics():
         rows = cursor.fetchall()
 
         result = []
-       for r in rows:
+        for r in rows:
             host = HOST_MAP.get(
                 r[0],
                 r[0]
