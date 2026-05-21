@@ -33,8 +33,23 @@ def dashboard(request: Request):
 
     cursor.execute(
         """
-        SELECT host,cpu,ram,disk
+        WITH latest AS (
+
+        SELECT *,
+            ROW_NUMBER() OVER (
+                PARTITION BY host
+                ORDER BY id DESC
+            ) AS rn
+
         FROM metrics
+
+    )
+
+    SELECT host,cpu,ram,disk
+
+    FROM latest
+
+    WHERE rn=1
         """
     )
 
