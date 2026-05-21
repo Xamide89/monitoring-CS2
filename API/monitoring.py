@@ -8,6 +8,12 @@ load_dotenv()
 
 app = FastAPI()
 
+HOST_MAP = {
+    "student": "Monitoring Server",
+    "FS01": "File Server",
+    "WIN-2H75UQOM7PG": "Domain Controller"
+}
+
 class Metric(BaseModel):
     host: str
     cpu: float
@@ -55,13 +61,17 @@ def get_metrics():
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT host, cpu, ram, disk FROM metrics")
+        cursor.execute("""SELECT host, cpu, ram, disk FROM metrics""")
         rows = cursor.fetchall()
 
         result = []
-        for r in rows:
+       for r in rows:
+            host = HOST_MAP.get(
+                r[0],
+                r[0]
+            )
             result.append({
-                "host": r[0],
+                "host": host,
                 "cpu": r[1],
                 "ram": r[2],
                 "disk": r[3]
