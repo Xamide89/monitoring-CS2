@@ -6,10 +6,3 @@ services:
     container_name: monitoring-agent
     env_file:
       - .envversion: '3.9'
-
-services:
-  monitoring-agent:
-    build: .
-    container_name: monitoring-agent
-    env_file:
-      - .env
